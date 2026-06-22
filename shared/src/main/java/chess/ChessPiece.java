@@ -2,6 +2,7 @@ package chess;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.ArrayList;
 
 public class ChessPiece {
     private final ChessGame.TeamColor pieceColor;
@@ -44,6 +45,7 @@ public class ChessPiece {
     }
 
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        throw new RuntimeException("Not implemented");
+        Collection<ChessMove> pieceMoves = new ArrayList<>();
+        return pieceMoves;
     }
 }
