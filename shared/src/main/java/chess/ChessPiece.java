@@ -109,6 +109,41 @@ public class ChessPiece {
             }
         }
 
+        if (type == PieceType.QUEEN) {
+            int[][] queenMoves = {
+                    {1,0}, // up
+                    {-1,0}, // down
+                    {0,-1}, // left
+                    {0,1},  // right
+                    {1,-1}, // up left
+                    {1,1}, // up right
+                    {-1,-1}, // down left
+                    {-1,1}  // down right
+            };
+            for (int[] move : queenMoves) {
+                int myRow = myPosition.getRow();
+                int myCol = myPosition.getColumn();
+                int rowMove = move[0];
+                int colMove = move[1];
+                int newRow = rowMove + myRow;
+                int newCol = colMove + myCol;
+                while (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece newPiece = board.getPiece(newPosition);
+                    if (newPiece == null) {
+                        pieceMoves.add(new ChessMove(myPosition, newPosition, null));
+                    } else {
+                        if (pieceColor != newPiece.getTeamColor()) {
+                            pieceMoves.add(new ChessMove(myPosition, newPosition, null));
+                        }
+                        break;
+                    }
+                    newRow = newRow + rowMove;
+                    newCol = newCol + colMove;
+                }
+            }
+        }
+
         return pieceMoves;
     }
 }
