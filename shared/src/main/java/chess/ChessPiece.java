@@ -46,6 +46,38 @@ public class ChessPiece {
 
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         Collection<ChessMove> pieceMoves = new ArrayList<>();
+
+        if (type == PieceType.ROOK) {
+            int[][] rookMoves = {
+                    {1,0}, // up
+                    {-1,0}, // down
+                    {0,-1}, // left
+                    {0,1}  // right
+            };
+            for (int[] move : rookMoves) {
+                int myRow = myPosition.getRow();
+                int myCol = myPosition.getColumn();
+                int rowMove = move[0];
+                int colMove = move[1];
+                int newRow = rowMove + myRow;
+                int newCol = colMove + myCol;
+                while (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece newPiece = board.getPiece(newPosition);
+                    if (newPiece == null) {
+                        pieceMoves.add(new ChessMove(myPosition, newPosition, null));
+                    } else {
+                        if (pieceColor != newPiece.getTeamColor()) {
+                            pieceMoves.add(new ChessMove(myPosition, newPosition, null));
+                        }
+                        break;
+                    }
+                    newRow = newRow + rowMove;
+                    newCol = newCol + colMove;
+                }
+            }
+        }
+
         return pieceMoves;
     }
 }
