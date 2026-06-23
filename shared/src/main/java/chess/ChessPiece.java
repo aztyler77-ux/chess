@@ -78,6 +78,38 @@ public class ChessPiece {
             }
         }
 
+        if (type == PieceType.KNIGHT) {
+            int[][] knightMoves = {
+                    {1,-2},
+                    {1,2},
+                    {2,-1},
+                    {2,1},
+                    {-1,-2},
+                    {-1,2},
+                    {-2,-1},
+                    {-2,1}
+            };
+            for (int[] move : knightMoves) {
+                int myRow = myPosition.getRow();
+                int myCol = myPosition.getColumn();
+                int rowMove = move[0];
+                int colMove = move[1];
+                int newRow = myRow + rowMove;
+                int newCol = myCol + colMove;
+                if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece newPiece = board.getPiece(newPosition);
+                    if (newPiece == null) {
+                        pieceMoves.add(new ChessMove(myPosition, newPosition, null));
+                    } else {
+                        if (pieceColor != newPiece.getTeamColor()) {
+                            pieceMoves.add(new ChessMove(myPosition, newPosition, null));
+                        }
+                    }
+                }
+            }
+        }
+
         if (type == PieceType.BISHOP) {
             int[][] bishopMoves = {
                     {1,-1}, // up left
