@@ -45,7 +45,6 @@ public class ChessGame {
     }
 
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
         /*
         Goal: Return whether the King is in Check
         Locate and mark a position for teamColor’s king on the board
@@ -53,6 +52,39 @@ public class ChessGame {
         If any of those moves end on the marked king position, return true
         Otherwise, return false
          */
+        ChessPosition kingPosition = null;
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition currentPosition = new ChessPosition(row, col);
+                ChessPiece currentPiece = board.getPiece(currentPosition);
+                if (currentPiece != null) {
+                    if (currentPiece.getTeamColor() == teamColor) {
+                        if (currentPiece.getPieceType() == ChessPiece.PieceType.KING) {
+                            kingPosition = new ChessPosition(row, col);
+                        }
+                    }
+                }
+            }
+        }
+        if (kingPosition != null) {
+            for (int row = 1; row <= 8; row++) {
+                for (int col = 1; col <= 8; col++) {
+                    ChessPosition currentPosition = new ChessPosition(row, col);
+                    ChessPiece currentPiece = board.getPiece(currentPosition);
+                    if (currentPiece != null) {
+                        if (currentPiece.getTeamColor() != teamColor) {
+                            Collection<ChessMove> enemyMoves = currentPiece.pieceMoves(board, currentPosition);
+                            for (ChessMove move : enemyMoves) {
+                                if (move.getEndPosition() == kingPosition) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public boolean isInCheckmate(TeamColor teamColor) {
