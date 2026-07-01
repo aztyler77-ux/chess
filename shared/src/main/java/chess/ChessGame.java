@@ -78,6 +78,11 @@ public class ChessGame {
     }
 
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        /*
+        Goal: Apply the legal move then change the turn
+        Get the piece at the startPosition of the move, then apply it to the original board
+        Change teamTurn
+         */
         if (move == null ||
             move.getStartPosition() == null ||
             board.getPiece(move.getStartPosition()) == null) {
@@ -157,21 +162,19 @@ public class ChessGame {
     public boolean isInCheckmate(TeamColor teamColor) {
         throw new RuntimeException("Not implemented");
         /*
-        Goal: Return whether the team is in checkmate (no valid moves)
-        Loop through teamColor’s pieces and check validMoves
-        If any piece has at least one item, return false
-        Otherwise, return true
+        Goal: Return whether the team is in Checkmate (king is in check & no legal moves to get out of it)
+        Check if king is in check - return false if not.
+        Otherwise, check if any legal moves get the king out of check.
+        If not, return True, otherwise - return false.
          */
     }
 
     public boolean isInStalemate(TeamColor teamColor) {
         throw new RuntimeException("Not implemented");
         /*
-        Goal: Return whether there is a stalemate (no valid moves and not in check)
-        Same logic as isInCheckmate, but teamColor must not be in check
-        Loop through teamColor’s pieces and check validMoves
-        If any piece has at least one item, return false
-        Otherwise, return true
+        Goal: Return whether there is a stalemate (no legal moves and king not in check)
+        If teamColor king not in check, return false.
+        Otherwise, return true if teamColor’s pieces contain no legal moves.
          */
     }
 
