@@ -59,6 +59,11 @@ public class ChessGame {
 
             testBoard.addPiece(move.getStartPosition(), null);
             testBoard.addPiece(move.getEndPosition(), currentPiece);
+            /*
+            clear startPosition on testBoard
+            if there's a promotion: add a promotion piece of the same color
+            Otherwise, add piece to the endPosition on testBoard
+            */
 
             ChessBoard saveOriginal = board;
             board = testBoard;
