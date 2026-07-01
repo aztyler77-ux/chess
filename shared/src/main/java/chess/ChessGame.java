@@ -1,6 +1,7 @@
 package chess;
 
 import java.util.Collection;
+import java.util.ArrayList;
 
 public class ChessGame {
     private ChessBoard board;
@@ -26,13 +27,37 @@ public class ChessGame {
     }
 
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
         /*
         Goal: Return a list containing the legal moves for a friendly piece on the given startPosition
         Get the pieceMoves of the piece at startPosition
         Create a copy of the board and apply each move, checking if it puts the King in check
         If it doesn’t, add it to legalMoves
          */
+        Collection<ChessMove> legalMoves = new ArrayList<>();
+
+        ChessBoard testBoard = new ChessBoard();
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition currentPosition = new ChessPosition(row, col);
+                ChessPiece currentPiece = board.getPiece(currentPosition);
+                if (currentPiece != null) {
+                    testBoard.addPiece(new ChessPosition(row, col), new ChessPiece(currentPiece.getTeamColor(), currentPiece.getPieceType()));
+                }
+            }
+        }
+
+        ChessPiece currentPiece = board.getPiece(startPosition);
+        Collection<ChessMove> pieceMoves = currentPiece.pieceMoves(board, startPosition);
+
+        for (ChessMove move : pieceMoves) {
+            testBoard.addPiece(move.getStartPosition(), null);
+            testBoard.addPiece(move.getEndPosition(), currentPiece);
+            if (isInCheck(currentPiece.getTeamColor())) {
+                legalMoves.add(move);
+            }
+        }
+
+        return legalMoves;
     }
 
     public void makeMove(ChessMove move) throws InvalidMoveException {
