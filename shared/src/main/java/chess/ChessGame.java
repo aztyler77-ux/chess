@@ -78,12 +78,35 @@ public class ChessGame {
     }
 
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
-        /*
-        Goal: Apply the legal move then change the turn
-        Get the piece at the startPosition of the move, then apply it to the original board
-        Change teamTurn
-         */
+        if (move == null ||
+            move.getStartPosition() == null ||
+            board.getPiece(move.getStartPosition()) == null) {
+            throw new InvalidMoveException();
+        }
+
+        ChessPiece currentPiece = board.getPiece(move.getStartPosition());
+
+        if (currentPiece.getTeamColor() != teamTurn) {
+            throw new InvalidMoveException();
+        }
+
+        Collection<ChessMove> pieceLegalMoves = validMoves(move.getStartPosition());
+
+        if (pieceLegalMoves.contains(move)) {
+            board.addPiece(move.getStartPosition(), null);
+            if (move.getPromotionPiece() != null) {
+                board.addPiece(move.getEndPosition(), new ChessPiece(currentPiece.getTeamColor(), move.getPromotionPiece()));
+            } else {
+                board.addPiece(move.getEndPosition(), currentPiece);
+            }
+            if (teamTurn == ChessGame.TeamColor.WHITE) {
+                teamTurn = ChessGame.TeamColor.BLACK;
+            } else {
+                teamTurn = ChessGame.TeamColor.WHITE;
+            }
+        } else {
+            throw new InvalidMoveException();
+        }
     }
 
     public boolean isInCheck(TeamColor teamColor) {
@@ -130,7 +153,6 @@ public class ChessGame {
         }
         return false;
     }
-
 
     public boolean isInCheckmate(TeamColor teamColor) {
         throw new RuntimeException("Not implemented");
