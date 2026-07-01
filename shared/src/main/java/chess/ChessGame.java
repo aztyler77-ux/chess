@@ -60,13 +60,15 @@ public class ChessGame {
                 if (currentPiece != null) {
                     if (currentPiece.getTeamColor() == teamColor) {
                         if (currentPiece.getPieceType() == ChessPiece.PieceType.KING) {
-                            kingPosition = new ChessPosition(row, col);
+                            kingPosition = currentPosition;
                         }
                     }
                 }
             }
         }
-        if (kingPosition != null) {
+        if (kingPosition == null) {
+            throw new IllegalStateException(teamColor + " king was not found!");
+        } else {
             for (int row = 1; row <= 8; row++) {
                 for (int col = 1; col <= 8; col++) {
                     ChessPosition currentPosition = new ChessPosition(row, col);
@@ -75,7 +77,7 @@ public class ChessGame {
                         if (currentPiece.getTeamColor() != teamColor) {
                             Collection<ChessMove> enemyMoves = currentPiece.pieceMoves(board, currentPosition);
                             for (ChessMove move : enemyMoves) {
-                                if (move.getEndPosition() == kingPosition) {
+                                if (move.getEndPosition().equals(kingPosition)) {
                                     return true;
                                 }
                             }
@@ -86,6 +88,7 @@ public class ChessGame {
         }
         return false;
     }
+
 
     public boolean isInCheckmate(TeamColor teamColor) {
         throw new RuntimeException("Not implemented");
