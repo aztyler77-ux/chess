@@ -36,7 +36,8 @@ public class ChessGame {
         Collection<ChessMove> legalMoves = new ArrayList<>();
 
         if (startPosition == null) {
-            return null;}
+            return null;
+        }
 
         ChessPiece currentPiece = board.getPiece(startPosition);
 
@@ -84,8 +85,8 @@ public class ChessGame {
         Change teamTurn
          */
         if (move == null ||
-            move.getStartPosition() == null ||
-            board.getPiece(move.getStartPosition()) == null) {
+                move.getStartPosition() == null ||
+                board.getPiece(move.getStartPosition()) == null) {
             throw new InvalidMoveException();
         }
 
@@ -160,13 +161,31 @@ public class ChessGame {
     }
 
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
         /*
         Goal: Return whether the team is in Checkmate (king is in check & no legal moves to get out of it)
         Check if king is in check - return false if not.
         Otherwise, check if any legal moves get the king out of check.
         If not, return True, otherwise - return false.
          */
+        if (!isInCheck(teamColor)) {
+            return false;
+        } else {
+            for (int row = 1; row <= 8; row++) {
+                for (int col = 1; col <= 8; col++) {
+                    ChessPosition currentPosition = new ChessPosition(row, col);
+                    ChessPiece currentPiece = board.getPiece(currentPosition);
+                    if (currentPiece != null) {
+                        if (currentPiece.getTeamColor() == teamColor) {
+                            Collection<ChessMove> legalMoves = validMoves(currentPosition);
+                            if (legalMoves != null && !legalMoves.isEmpty()) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        }
     }
 
     public boolean isInStalemate(TeamColor teamColor) {
