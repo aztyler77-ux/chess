@@ -1,0 +1,25 @@
+﻿ChessGame commit transfer note
+
+I accidentally implemented Phase 1 ChessGame work in my chess-programming-exam repo instead of the main chess assignment repo.
+
+The commits below are the original commits from the wrong repo that I am transferring into this repo.
+
+Original ChessGame commit history:
+555fd64 | 2026-06-23 15:20:01 -0600 | Initial commit
+32b40fa | 2026-06-28 15:17:44 -0600 | Implement ChessGame fields and accessors
+eac1aff | 2026-06-28 15:23:32 -0600 | Implement getTeamTurn, setTeamTurn, setBoard, and getBoard
+8fc6269 | 2026-06-28 15:27:39 -0600 | Initialize board to be reset
+c4861e7 | 2026-06-29 17:26:43 -0600 | Add general pseudocode as an outline for ChessGame
+92c023f | 2026-06-30 00:01:24 -0600 | Implement rudimentary isInCheck logic (to be refined later)
+21b8a53 | 2026-06-30 22:17:11 -0600 | Add first past isInCheck method
+e58c0b2 | 2026-06-30 22:56:15 -0600 | Start adding logic for validMoves implementation
+dc6cfa4 | 2026-06-30 23:27:09 -0600 | Add further logic and checks for validMoves method
+8078223 | 2026-06-30 23:36:44 -0600 | Add notes for pawn promotion logic plan within validMoves
+65299be | 2026-07-01 00:15:35 -0600 | Finish the first pass logic for validMoves
+884433a | 2026-07-01 01:06:36 -0600 | Add the first pass logic to makeMove
+d3b1abd | 2026-07-01 14:22:27 -0600 | Update plan for isInCheckmate and isInStalemate logic
+110ec2e | 2026-07-01 20:23:38 -0600 | Implement isInCheckmate first pass logic
+d5ef43c | 2026-07-01 21:23:42 -0600 | Implement isInStalemate first pass logic
+d67c7d9 | 2026-07-01 23:11:31 -0600 | Generate equals and hashcode for ChessGame
+0232a70 | 2026-07-01 23:20:35 -0600 | Implement check for a null end position in makeMove
+60ac5da | 2026-07-01 23:24:17 -0600 | Fix comment for isInStalemate logic
