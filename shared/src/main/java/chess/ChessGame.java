@@ -207,7 +207,7 @@ public class ChessGame {
     public boolean isInStalemate(TeamColor teamColor) {
         /*
         Goal: Return whether there is a stalemate (no legal moves and king not in check)
-        If teamColor king not in check, return false.
+        If teamColor king in check, return false.
         Otherwise, return true if teamColor’s pieces contain no legal moves.
          */
         for (int row = 1; row <= 8; row++) {
