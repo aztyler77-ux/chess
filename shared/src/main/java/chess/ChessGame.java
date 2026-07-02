@@ -189,12 +189,29 @@ public class ChessGame {
     }
 
     public boolean isInStalemate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
         /*
         Goal: Return whether there is a stalemate (no legal moves and king not in check)
         If teamColor king not in check, return false.
         Otherwise, return true if teamColor’s pieces contain no legal moves.
          */
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition currentPosition = new ChessPosition(row, col);
+                ChessPiece currentPiece = board.getPiece(currentPosition);
+                if (currentPiece != null) {
+                    if (currentPiece.getTeamColor() == teamColor) {
+                        Collection<ChessMove> legalMoves = validMoves(currentPosition);
+                        if (legalMoves != null && !legalMoves.isEmpty()) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        if (!isInCheck(teamColor)) {
+            return true;
+        }
+        return false;
     }
 
     public void setBoard(ChessBoard board) {
