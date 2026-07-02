@@ -86,6 +86,7 @@ public class ChessGame {
         Change teamTurn
          */
         if (move == null ||
+                move.getEndPosition() == null ||
                 move.getStartPosition() == null ||
                 board.getPiece(move.getStartPosition()) == null) {
             throw new InvalidMoveException();
