@@ -50,3 +50,6 @@ java -jar client/target/client-jar-with-dependencies.jar
 
 ♕ 240 Chess Client: chess.ChessPiece@7852e922
 ```
+
+## Phase 2 Server Design
+Sequence diagram: powershell -NoProfile -Command "Add-Content -Path README.md -Value @('', '## Phase 2 Server Design', ('Sequence diagram: ' + (Get-Clipboard)))"
