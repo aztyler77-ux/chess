@@ -35,6 +35,27 @@ public class UserService {
         return new RegisterResult(request.username(), authToken);
     }
 
-    // helper method to detect if string value is blank
+    public LoginResult login(LoginRequest request) throws DataAccessException, BadRequestException, UnauthorizedException {
+        if (request == null ||
+            isBlank(request.username()) ||
+            isBlank(request.password())
+        ) {
+            throw new BadRequestException("Error: bad request");
+        }
+
+        UserData user = userDAO.getUser(request.username());
+
+        if (user == null ||
+            !request.password().equals(user.password())) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        String authToken = UUID.randomUUID().toString();
+        AuthData authData = new AuthData(authToken, request.username());
+        authDAO.createAuth(authData);
+        return new LoginResult(request.username(), authToken);
+    }
+
+    // helper method to detect if string value is missing or blank
     private boolean isBlank(String value) {return value == null || value.isBlank();}
 }
