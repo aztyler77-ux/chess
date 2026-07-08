@@ -34,6 +34,20 @@ public class GameService {
         return new CreateGameResult(gameID);
     }
 
+    public ListGamesResult listGames(ListGamesRequest request)
+            throws DataAccessException, UnauthorizedException {
+        if (request == null ||  isBlank(request.authToken())) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        AuthData authData = authDAO.getAuth(request.authToken());
+
+        if (authData == null) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+        return new ListGamesResult(gameDAO.listGames());
+    }
+
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
     }
