@@ -56,6 +56,21 @@ public class UserService {
         return new LoginResult(request.username(), authToken);
     }
 
+    public void logout (LogoutRequest request) throws DataAccessException, UnauthorizedException {
+        if (request == null ||
+            isBlank(request.authToken())) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        AuthData authData = authDAO.getAuth(request.authToken());
+
+        if (authData == null) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        authDAO.deleteAuth(request.authToken());
+    }
+
     // helper method to detect if string value is missing or blank
     private boolean isBlank(String value) {return value == null || value.isBlank();}
 }
