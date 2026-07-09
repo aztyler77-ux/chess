@@ -18,6 +18,9 @@ import service.AlreadyTakenException;
 import service.LoginRequest;
 import service.UnauthorizedException;
 import service.LogoutRequest;
+import service.ListGamesRequest;
+import service.CreateGameRequest;
+import service.JoinGameRequest;
 
 public class Server {
     // data stores for server
@@ -89,6 +92,55 @@ public class Server {
                 userService.logout(request);
                 ctx.status(200).json(Map.of());
             } catch (UnauthorizedException error) {ctx.status(401).json(Map.of("message", error.getMessage()));
+            } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
+            }
+        });
+
+        // list games
+        javalin.get("/game", ctx -> {
+            try {
+                String authToken = ctx.header("authorization");
+                ListGamesRequest request = new ListGamesRequest(authToken);
+                ctx.status(200).json(gameService.listGames(request));
+            } catch (UnauthorizedException error) {ctx.status(401).json(Map.of("message", error.getMessage()));
+            } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
+            }
+        });
+
+        // create game
+        javalin.post("/game", ctx -> {
+            try {
+                String authToken = ctx.header("authorization");
+                CreateGameRequest bodyRequest = gson.fromJson(ctx.body(), CreateGameRequest.class);
+                String gameName = null;
+                if (bodyRequest != null) {
+                    gameName = bodyRequest.gameName();
+                }
+                CreateGameRequest request = new CreateGameRequest(authToken, gameName);
+                ctx.status(200).json(gameService.createGame(request));
+            } catch (BadRequestException error) {ctx.status(400).json(Map.of("message", error.getMessage()));
+            } catch (UnauthorizedException error) {ctx.status(401).json(Map.of("message", error.getMessage()));
+            } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
+            }
+        });
+
+        // join game
+        javalin.put("/game", ctx -> {
+            try {
+                String authToken = ctx.header("authorization");
+                JoinGameRequest bodyRequest = gson.fromJson(ctx.body(), JoinGameRequest.class);
+                String playerColor = null;
+                Integer gameID = null;
+                if (bodyRequest != null) {
+                    playerColor = bodyRequest.playerColor();
+                    gameID = bodyRequest.gameID();
+                }
+                JoinGameRequest request = new JoinGameRequest(authToken, playerColor, gameID);
+                gameService.joinGame(request);
+                ctx.status(200).json(Map.of());
+            } catch (BadRequestException error) {ctx.status(400).json(Map.of("message", error.getMessage()));
+            } catch (UnauthorizedException error) {ctx.status(401).json(Map.of("message", error.getMessage()));
+            } catch (AlreadyTakenException error) {ctx.status(403).json(Map.of("message", error.getMessage()));
             } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
             }
         });
