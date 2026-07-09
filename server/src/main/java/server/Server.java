@@ -9,6 +9,8 @@ import dataaccess.UserDAO;
 import service.ClearService;
 import service.GameService;
 import service.UserService;
+import dataaccess.DataAccessException;
+import java.util.Map;
 
 public class Server {
     private final GameService gameService;
@@ -28,7 +30,14 @@ public class Server {
         gameService = new GameService(gameDAO, authDAO);
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
-        // endpoints will  be registered here later
+        javalin.delete("/db", ctx -> {
+            try {
+                clearService.clear();
+                ctx.status(200).json(Map.of());
+            } catch (DataAccessException error) {
+                ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
+            }
+        });
     }
 
     public int run(int targetPort) {
