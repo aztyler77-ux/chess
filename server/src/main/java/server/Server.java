@@ -13,12 +13,11 @@ import dataaccess.DataAccessException;
 import java.util.Map;
 import service.RegisterRequest;
 import service.BadRequestException;
-import dataaccess.DataAccessException;
 import com.google.gson.Gson;
 import service.AlreadyTakenException;
-
-
-
+import service.LoginRequest;
+import service.UnauthorizedException;
+import service.LogoutRequest;
 
 public class Server {
     // data stores for server
@@ -49,6 +48,7 @@ public class Server {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
         // http endpoints
+        // clear all
         javalin.delete("/db", ctx -> {
             try {
                 clearService.clear();
@@ -59,6 +59,7 @@ public class Server {
 
         });
 
+        // register
         javalin.post("/user", ctx -> {
             try {
                 RegisterRequest request = gson.fromJson(ctx.body(), RegisterRequest.class);
@@ -68,7 +69,31 @@ public class Server {
             } catch (AlreadyTakenException error) {ctx.status(403).json(Map.of("message", error.getMessage()));
             }
         });
+
+        // login
+        javalin.post("/session", ctx -> {
+            try {
+                LoginRequest request = gson.fromJson(ctx.body(), LoginRequest.class);
+                ctx.status(200).json(userService.login(request));
+            } catch (BadRequestException error) {ctx.status(400).json(Map.of("message", error.getMessage()));
+            } catch (UnauthorizedException error) {ctx.status(401).json(Map.of("message", error.getMessage()));
+            } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
+            }
+        });
+
+        // logout
+        javalin.delete("/session", ctx -> {
+            try {
+                String authToken = ctx.header("authorization");
+                LogoutRequest request = new LogoutRequest(authToken);
+                userService.logout(request);
+                ctx.status(200).json(Map.of());
+            } catch (UnauthorizedException error) {ctx.status(401).json(Map.of("message", error.getMessage()));
+            } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
+            }
+        });
     }
+
     // start & stop server
     public int run(int targetPort) {
         javalin.start(targetPort);
