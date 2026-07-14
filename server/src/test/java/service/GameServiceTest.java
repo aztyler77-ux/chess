@@ -8,6 +8,9 @@ import model.AuthData;
 import model.GameData;
 
 import org.junit.jupiter.api.Test;
+import service.exception.AlreadyTakenException;
+import service.exception.BadRequestException;
+import service.exception.UnauthorizedException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
