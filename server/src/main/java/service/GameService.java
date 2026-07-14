@@ -56,9 +56,9 @@ public class GameService {
         AuthData authData = authDAO.getAuth(request.authToken());
         if (authData == null) {throw new UnauthorizedException("Error: unauthorized");}
         if (request.gameID() == null) {throw new BadRequestException("Error: bad request");}
-        if (!"WHITE".equals(request.playerColor()))
-            if (!"BLACK".equals(request.playerColor())) {
-                throw new BadRequestException("Error: bad request");}
+        if (!"WHITE".equals(request.playerColor()) && !"BLACK".equals(request.playerColor())) {
+            throw new BadRequestException("Error: bad request");
+        }
 
         GameData gameData = gameDAO.getGame(request.gameID());
         if (gameData == null) {throw new BadRequestException("Error: bad request");}

@@ -52,16 +52,7 @@ public class Server {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
         // http endpoints
-        // clear all
-        javalin.delete("/db", ctx -> {
-            try {
-                clearService.clear();
-                sendJson(ctx, 200, Map.of());
-            } catch (DataAccessException error) {
-                sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));
-            }
-
-        });
+        registerClearRoute();
 
         // register
         javalin.post("/user", ctx -> {
@@ -138,6 +129,17 @@ public class Server {
             catch (UnauthorizedException error) {sendJson(ctx, 401, Map.of("message", error.getMessage()));}
             catch (AlreadyTakenException error) {sendJson(ctx, 403, Map.of("message", error.getMessage()));}
             catch (DataAccessException error) {sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
+        });
+    }
+
+    // clear route
+    private void registerClearRoute() {
+        javalin.delete("/db", ctx -> {
+            try {
+                clearService.clear();
+                sendJson(ctx, 200, Map.of());}
+            catch (DataAccessException error) {
+                sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
         });
     }
 
