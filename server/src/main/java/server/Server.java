@@ -1,5 +1,6 @@
 package server;
 import io.javalin.Javalin;
+import io.javalin.http.Context;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import dataaccess.MemoryAuthDAO;
@@ -55,9 +56,9 @@ public class Server {
         javalin.delete("/db", ctx -> {
             try {
                 clearService.clear();
-                ctx.status(200).json(Map.of());
+                sendJson(ctx, 200, Map.of());
             } catch (DataAccessException error) {
-                ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
+                sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));
             }
 
         });
@@ -66,22 +67,20 @@ public class Server {
         javalin.post("/user", ctx -> {
             try {
                 RegisterRequest request = gson.fromJson(ctx.body(), RegisterRequest.class);
-                ctx.status(200).json(userService.register(request));
-            } catch (BadRequestException error) {ctx.status(400).json(Map.of("message", error.getMessage()));
-            } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
-            } catch (AlreadyTakenException error) {ctx.status(403).json(Map.of("message", error.getMessage()));
-            }
+                sendJson(ctx, 200, userService.register(request));}
+            catch (BadRequestException error) {sendJson(ctx, 400, Map.of("message", error.getMessage()));}
+            catch (DataAccessException error) {sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
+            catch (AlreadyTakenException error) {sendJson(ctx, 403, Map.of("message", error.getMessage()));}
         });
 
         // login
         javalin.post("/session", ctx -> {
             try {
                 LoginRequest request = gson.fromJson(ctx.body(), LoginRequest.class);
-                ctx.status(200).json(userService.login(request));
-            } catch (BadRequestException error) {ctx.status(400).json(Map.of("message", error.getMessage()));
-            } catch (UnauthorizedException error) {ctx.status(401).json(Map.of("message", error.getMessage()));
-            } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
-            }
+                sendJson(ctx, 200, userService.login(request));}
+            catch (BadRequestException error) {sendJson(ctx, 400, Map.of("message", error.getMessage()));}
+            catch (UnauthorizedException error) {sendJson(ctx, 401, Map.of("message", error.getMessage()));}
+            catch (DataAccessException error) {sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
         });
 
         // logout
@@ -90,10 +89,9 @@ public class Server {
                 String authToken = ctx.header("authorization");
                 LogoutRequest request = new LogoutRequest(authToken);
                 userService.logout(request);
-                ctx.status(200).json(Map.of());
-            } catch (UnauthorizedException error) {ctx.status(401).json(Map.of("message", error.getMessage()));
-            } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
-            }
+                sendJson(ctx, 200, Map.of());}
+            catch (UnauthorizedException error) {sendJson(ctx, 401, Map.of("message", error.getMessage()));}
+            catch (DataAccessException error) {sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
         });
 
         // list games
@@ -101,10 +99,9 @@ public class Server {
             try {
                 String authToken = ctx.header("authorization");
                 ListGamesRequest request = new ListGamesRequest(authToken);
-                ctx.status(200).json(gameService.listGames(request));
-            } catch (UnauthorizedException error) {ctx.status(401).json(Map.of("message", error.getMessage()));
-            } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
-            }
+                sendJson(ctx, 200, gameService.listGames(request));}
+            catch (UnauthorizedException error) {sendJson(ctx, 401, Map.of("message", error.getMessage()));}
+            catch (DataAccessException error) {sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
         });
 
         // create game
@@ -117,11 +114,10 @@ public class Server {
                     gameName = bodyRequest.gameName();
                 }
                 CreateGameRequest request = new CreateGameRequest(authToken, gameName);
-                ctx.status(200).json(gameService.createGame(request));
-            } catch (BadRequestException error) {ctx.status(400).json(Map.of("message", error.getMessage()));
-            } catch (UnauthorizedException error) {ctx.status(401).json(Map.of("message", error.getMessage()));
-            } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
-            }
+                sendJson(ctx, 200, gameService.createGame(request));}
+            catch (BadRequestException error) {sendJson(ctx, 400, Map.of("message", error.getMessage()));}
+            catch (UnauthorizedException error) {sendJson(ctx, 401, Map.of("message", error.getMessage()));}
+            catch (DataAccessException error) {sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
         });
 
         // join game
@@ -137,13 +133,19 @@ public class Server {
                 }
                 JoinGameRequest request = new JoinGameRequest(authToken, playerColor, gameID);
                 gameService.joinGame(request);
-                ctx.status(200).json(Map.of());
-            } catch (BadRequestException error) {ctx.status(400).json(Map.of("message", error.getMessage()));
-            } catch (UnauthorizedException error) {ctx.status(401).json(Map.of("message", error.getMessage()));
-            } catch (AlreadyTakenException error) {ctx.status(403).json(Map.of("message", error.getMessage()));
-            } catch (DataAccessException error) {ctx.status(500).json(Map.of("message", "Error: " + error.getMessage()));
-            }
+                sendJson(ctx, 200, Map.of());}
+            catch (BadRequestException error) {sendJson(ctx, 400, Map.of("message", error.getMessage()));}
+            catch (UnauthorizedException error) {sendJson(ctx, 401, Map.of("message", error.getMessage()));}
+            catch (AlreadyTakenException error) {sendJson(ctx, 403, Map.of("message", error.getMessage()));}
+            catch (DataAccessException error) {sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
         });
+    }
+
+    // javalin configured object mapper
+    private void sendJson(Context ctx, int statusCode, Object body) {
+        ctx.status(statusCode);
+        ctx.contentType("application/json");
+        ctx.result(gson.toJson(body));
     }
 
     // start & stop server
