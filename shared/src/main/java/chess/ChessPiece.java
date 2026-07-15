@@ -153,55 +153,54 @@ public class ChessPiece {
                 startingRow = 7;
                 promotionRow = 1;
             }
-                int myRow = myPosition.getRow();
-                int myCol = myPosition.getColumn();
-                // forward
-                if (inBounds(myRow + direction, myCol)) {
-                    ChessPosition forward = new ChessPosition(myRow + direction, myCol);
-                    ChessPiece forwardPiece = board.getPiece(forward);
-                    if (forwardPiece == null) {
-                        if (forward.getRow() == promotionRow) {
-                            addPromotionMoves(pieceMoves, myPosition, forward);
-                        } else {
-                            pieceMoves.add(new ChessMove(myPosition, forward, null));
-                        }
-                        if (myRow == startingRow) {
-                            ChessPosition doubleForward = new ChessPosition(myRow  + (direction * 2), myCol);
-                            ChessPiece doubleForwardPiece = board.getPiece(doubleForward);
-                            if (doubleForwardPiece == null) {
-                                pieceMoves.add(new ChessMove(myPosition, doubleForward, null));
-                            }
-                        }
+            int myRow = myPosition.getRow();
+            int myCol = myPosition.getColumn();
+            // forward
+            if (inBounds(myRow + direction, myCol)) {
+                ChessPosition forward = new ChessPosition(myRow + direction, myCol);
+                ChessPiece forwardPiece = board.getPiece(forward);
+                if (forwardPiece == null) {
+                    if (forward.getRow() == promotionRow) {
+                        addPromotionMoves(pieceMoves, myPosition, forward);
+                    } else {
+                        pieceMoves.add(new ChessMove(myPosition, forward, null));
                     }
                 }
-                // attack left
-                if (inBounds(myRow + direction, myCol - 1)) {
-                    ChessPosition attackLeft = new ChessPosition(myRow + direction, myCol - 1);
-                    ChessPiece attackLeftPiece = board.getPiece(attackLeft);
-                    if (attackLeftPiece != null) {
-                        if (attackLeftPiece.getTeamColor() != pieceColor) {
-                            if (attackLeft.getRow() == promotionRow) {
-                                addPromotionMoves(pieceMoves, myPosition, attackLeft);
-                            } else {
-                                pieceMoves.add(new ChessMove(myPosition, attackLeft, null));
-                            }
-                        }
+            }
+            // double forward
+            if (myRow == startingRow) {
+                ChessPosition forward = new ChessPosition(myRow + direction, myCol);
+                ChessPiece forwardPiece = board.getPiece(forward);
+                ChessPosition doubleForward = new ChessPosition(myRow + (direction * 2), myCol);
+                ChessPiece doubleForwardPiece = board.getPiece(doubleForward);
+                if (forwardPiece == null && doubleForwardPiece == null) {
+                    pieceMoves.add(new ChessMove(myPosition, doubleForward, null));
+                }
+            }
+            // attack left
+            if (inBounds(myRow + direction, myCol - 1)) {
+                ChessPosition attackLeft = new ChessPosition(myRow + direction, myCol - 1);
+                ChessPiece attackLeftPiece = board.getPiece(attackLeft);
+                if (attackLeftPiece != null && attackLeftPiece.getTeamColor() != pieceColor) {
+                    if (attackLeft.getRow() == promotionRow) {
+                        addPromotionMoves(pieceMoves, myPosition, attackLeft);
+                    } else {
+                        pieceMoves.add(new ChessMove(myPosition, attackLeft, null));
                     }
                 }
-                // attack right
-                if (inBounds(myRow + direction, myCol + 1)) {
-                    ChessPosition attackRight = new ChessPosition(myRow + direction, myCol + 1);
-                    ChessPiece attackRightPiece = board.getPiece(attackRight);
-                    if (attackRightPiece != null) {
-                        if (attackRightPiece.getTeamColor() != pieceColor) {
-                            if (attackRight.getRow() == promotionRow) {
-                                addPromotionMoves(pieceMoves, myPosition, attackRight);
-                            } else {
-                                pieceMoves.add(new ChessMove(myPosition, attackRight, null));
-                            }
-                        }
+            }
+            // attack right
+            if (inBounds(myRow + direction, myCol + 1)) {
+                ChessPosition attackRight = new ChessPosition(myRow + direction, myCol + 1);
+                ChessPiece attackRightPiece = board.getPiece(attackRight);
+                if (attackRightPiece != null && attackRightPiece.getTeamColor() != pieceColor) {
+                    if (attackRight.getRow() == promotionRow) {
+                        addPromotionMoves(pieceMoves, myPosition, attackRight);
+                    } else {
+                        pieceMoves.add(new ChessMove(myPosition, attackRight, null));
                     }
                 }
+            }
         }
         return pieceMoves;
     }
