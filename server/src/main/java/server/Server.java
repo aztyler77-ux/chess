@@ -3,9 +3,10 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
-import dataaccess.MemoryAuthDAO;
-import dataaccess.MemoryGameDAO;
-import dataaccess.MemoryUserDAO;
+import dataaccess.DatabaseSetup;
+import dataaccess.MySQLAuthDAO;
+import dataaccess.MySQLGameDAO;
+import dataaccess.MySQLUserDAO;
 import dataaccess.UserDAO;
 import service.ClearService;
 import service.GameService;
@@ -38,10 +39,15 @@ public class Server {
     private final Javalin javalin;
 
     public Server() {
-        // memory DAO group
-        userDAO = new MemoryUserDAO();
-        authDAO = new MemoryAuthDAO();
-        gameDAO = new MemoryGameDAO();
+        try {DatabaseSetup.createTables();
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Could not set up database", e);
+        }
+
+        // database DAO group
+        userDAO = new MySQLUserDAO();
+        authDAO = new MySQLAuthDAO();
+        gameDAO = new MySQLGameDAO();
         // services connect to DOAs
         clearService = new ClearService(userDAO, authDAO, gameDAO);
         userService = new UserService(userDAO, authDAO);
