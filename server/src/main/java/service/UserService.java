@@ -8,7 +8,7 @@ import model.UserData;
 import service.exception.AlreadyTakenException;
 import service.exception.BadRequestException;
 import service.exception.UnauthorizedException;
-
+import org.mindrot.jbcrypt.BCrypt;
 import java.util.UUID;
 
 public class UserService {
@@ -31,7 +31,8 @@ public class UserService {
         UserData existingUser = userDAO.getUser(request.username());
         if (existingUser != null) {throw new AlreadyTakenException("Error: already taken");}
 
-        UserData newUser = new UserData(request.username(), request.password(), request.email());
+        String hashedPassword = BCrypt.hashpw(request.password(), BCrypt.gensalt());
+        UserData newUser = new UserData(request.username(), hashedPassword, request.email());
         userDAO.createUser(newUser);
         String authToken = UUID.randomUUID().toString();
         AuthData authData = new AuthData(authToken, request.username());
@@ -41,16 +42,19 @@ public class UserService {
 
     public LoginResult login(LoginRequest request) throws DataAccessException, BadRequestException, UnauthorizedException {
         if (request == null ||
-            isBlank(request.username()) ||
-            isBlank(request.password())
+                isBlank(request.username()) ||
+                isBlank(request.password())
         ) {
             throw new BadRequestException("Error: bad request");
         }
 
         UserData user = userDAO.getUser(request.username());
 
-        if (user == null ||
-            !request.password().equals(user.password())) {
+        if (user == null) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        if (!BCrypt.checkpw(request.password(), user.password())) {
             throw new UnauthorizedException("Error: unauthorized");
         }
 
@@ -62,7 +66,7 @@ public class UserService {
 
     public void logout (LogoutRequest request) throws DataAccessException, UnauthorizedException {
         if (request == null ||
-            isBlank(request.authToken())) {
+                isBlank(request.authToken())) {
             throw new UnauthorizedException("Error: unauthorized");
         }
 

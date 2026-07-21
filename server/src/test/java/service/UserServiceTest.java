@@ -8,14 +8,17 @@ import model.AuthData;
 import model.UserData;
 
 import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
 import service.exception.AlreadyTakenException;
 import service.exception.BadRequestException;
 import service.exception.UnauthorizedException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserServiceTest {
     @Test
@@ -32,7 +35,12 @@ public class UserServiceTest {
         // check
         assertEquals("player", result.username());
         assertNotNull(result.authToken());
-        assertNotNull(userDAO.getUser("player"));
+
+        UserData storedUser = userDAO.getUser("player");
+        assertNotNull(storedUser);
+        assertNotEquals("password", storedUser.password());
+        assertTrue(BCrypt.checkpw("password", storedUser.password()));
+
         assertNotNull(authDAO.getAuth(result.authToken()));
     }
 
@@ -57,7 +65,10 @@ public class UserServiceTest {
         // fake data
         MemoryUserDAO userDAO = new MemoryUserDAO();
         MemoryAuthDAO authDAO = new MemoryAuthDAO();
-        userDAO.createUser(new UserData("player", "password", "email"));
+
+        String hashedPassword = BCrypt.hashpw("password", BCrypt.gensalt());
+        userDAO.createUser(new UserData("player", hashedPassword, "email"));
+
         UserService userService = new UserService(userDAO, authDAO);
         LoginRequest request = new LoginRequest("player", "password");
 
@@ -75,7 +86,10 @@ public class UserServiceTest {
         // fake data
         MemoryUserDAO userDAO = new MemoryUserDAO();
         MemoryAuthDAO authDAO = new MemoryAuthDAO();
-        userDAO.createUser(new UserData("player", "password", "email"));
+
+        String hashedPassword = BCrypt.hashpw("password", BCrypt.gensalt());
+        userDAO.createUser(new UserData("player", hashedPassword, "email"));
+
         UserService userService = new UserService(userDAO, authDAO);
 
         // failure = wrong pass
