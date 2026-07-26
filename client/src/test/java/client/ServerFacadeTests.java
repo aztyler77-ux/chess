@@ -17,6 +17,11 @@ public class ServerFacadeTests {
         facade = new ServerFacade(port);
     }
 
+    @BeforeEach
+    public void clearDatabase() throws ResponseException {
+        facade.clear();
+    }
+
     @AfterAll
     static void stopServer() {
         server.stop();

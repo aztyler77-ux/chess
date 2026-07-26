@@ -10,6 +10,12 @@ public class ServerFacade {
     private final HttpClient client = HttpClient.newHttpClient();
     private final String serverUrl;
 
+    public void clear() throws ResponseException {
+        var request = buildRequest("DELETE", "/db", null, null);
+        var response = sendRequest(request);
+        handleResponse(response, null);
+    }
+
     public ServerFacade(int port) {
         serverUrl = "http://localhost:" + port;
     }
