@@ -29,8 +29,14 @@ public class ServerFacadeTests {
 
 
     @Test
-    public void sampleTest() {
-        Assertions.assertTrue(true);
+    public void clearSuccess() {
+        Assertions.assertDoesNotThrow(() -> facade.clear());
+    }
+
+    @Test
+    public void clearFail() {
+        ServerFacade badFacade = new ServerFacade(1);
+        Assertions.assertThrows(ResponseException.class, () -> badFacade.clear());
     }
 
 }
