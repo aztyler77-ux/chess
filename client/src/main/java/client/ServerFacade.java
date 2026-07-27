@@ -5,6 +5,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import model.AuthData;
+import model.UserData;
 
 public class ServerFacade {
     private final HttpClient client = HttpClient.newHttpClient();
@@ -14,6 +16,13 @@ public class ServerFacade {
         var request = buildRequest("DELETE", "/db", null, null);
         var response = sendRequest(request);
         handleResponse(response, null);
+    }
+
+    public AuthData register(String username, String password, String email) throws ResponseException {
+        UserData user = new UserData(username, password, email);
+        var request = buildRequest("POST", "/user", user, null);
+        var response = sendRequest(request);
+        return handleResponse(response, AuthData.class);
     }
 
     public ServerFacade(int port) {

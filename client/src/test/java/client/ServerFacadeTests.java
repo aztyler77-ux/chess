@@ -39,4 +39,19 @@ public class ServerFacadeTests {
         Assertions.assertThrows(ResponseException.class, () -> badFacade.clear());
     }
 
+    @Test
+    public void registerSuccess() throws ResponseException {
+        var result = facade.register("player1", "password", "email");
+        Assertions.assertEquals("player1", result.username());
+        Assertions.assertFalse(result.authToken().isEmpty());
+    }
+
+    @Test
+    public void registerFail() throws ResponseException {
+        facade.register("player1", "password", "email");
+        Assertions.assertThrows(ResponseException.class, () -> facade.register("player1",
+                                                                               "password",
+                                                                                  "email"));
+    }
+
 }
