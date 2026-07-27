@@ -67,4 +67,17 @@ public class ServerFacade {
 
     private record ErrorResponse(String message) {
     }
+
+    public AuthData login(String username, String password) throws ResponseException {
+        UserData user = new UserData(username, password, null);
+        var request = buildRequest("POST", "/session", user, null);
+        var response = sendRequest(request);
+        return handleResponse(response, AuthData.class);
+    }
+
+    public void logout(String authToken) throws ResponseException {
+        var request = buildRequest("DELETE", "/session", null, authToken);
+        var response = sendRequest(request);
+        handleResponse(response, null);
+    }
 }
