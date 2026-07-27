@@ -94,4 +94,22 @@ public class ServerFacadeTests {
         Assertions.assertThrows(ResponseException.class,
                 () -> facade.createGame("bad-token", "My Game"));
     }
+
+    @Test
+    public void listGamesSuccess() throws ResponseException {
+        var user = facade.register("player1", "password", "email");
+
+        facade.createGame(user.authToken(), "Game One");
+        facade.createGame(user.authToken(), "Game Two");
+
+        var games = facade.listGames(user.authToken());
+
+        Assertions.assertEquals(2, games.size());
+    }
+
+    @Test
+    public void listGamesFail() {
+        Assertions.assertThrows(ResponseException.class,
+                () -> facade.listGames("bad-token"));
+    }
 }

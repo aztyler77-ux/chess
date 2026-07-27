@@ -8,6 +8,8 @@ import java.net.http.HttpResponse;
 import model.AuthData;
 import model.UserData;
 import java.util.Map;
+import model.GameData;
+import java.util.List;
 
 public class ServerFacade {
     private final HttpClient client = HttpClient.newHttpClient();
@@ -90,6 +92,14 @@ public class ServerFacade {
         return result.gameID();
     }
 
-    private record GameID(int gameID) {
+    private record GameID(int gameID) {}
+
+    public List<GameData> listGames(String authToken) throws ResponseException {
+        var request = buildRequest("GET", "/game", null, authToken);
+        var response = sendRequest(request);
+        var result = handleResponse(response, GameList.class);
+        return result.games();
     }
+
+    private record GameList(List<GameData> games) {}
 }
