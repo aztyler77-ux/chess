@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import model.AuthData;
 import model.UserData;
+import java.util.Map;
 
 public class ServerFacade {
     private final HttpClient client = HttpClient.newHttpClient();
@@ -79,5 +80,16 @@ public class ServerFacade {
         var request = buildRequest("DELETE", "/session", null, authToken);
         var response = sendRequest(request);
         handleResponse(response, null);
+    }
+
+    public int createGame(String authToken, String gameName) throws ResponseException {
+        var gameInfo = Map.of("gameName", gameName);
+        var request = buildRequest("POST", "/game", gameInfo, authToken);
+        var response = sendRequest(request);
+        var result = handleResponse(response, GameID.class);
+        return result.gameID();
+    }
+
+    private record GameID(int gameID) {
     }
 }

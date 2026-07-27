@@ -79,4 +79,19 @@ public class ServerFacadeTests {
     public void logoutFail() {
         Assertions.assertThrows(ResponseException.class, () -> facade.logout("bad-token"));
     }
+
+    @Test
+    public void createGameSuccess() throws ResponseException {
+        var user = facade.register("player1", "password", "email");
+
+        int gameID = facade.createGame(user.authToken(), "My Game");
+
+        Assertions.assertTrue(gameID > 0);
+    }
+
+    @Test
+    public void createGameFail() {
+        Assertions.assertThrows(ResponseException.class,
+                () -> facade.createGame("bad-token", "My Game"));
+    }
 }
