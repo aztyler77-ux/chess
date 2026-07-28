@@ -102,4 +102,11 @@ public class ServerFacade {
     }
 
     private record GameList(List<GameData> games) {}
+
+    public void joinGame(String authToken, String playerColor, int gameID) throws ResponseException {
+        var joinInfo = Map.of("playerColor", playerColor, "gameID", gameID);
+        var request = buildRequest("PUT", "/game", joinInfo, authToken);
+        var response = sendRequest(request);
+        handleResponse(response, null);
+    }
 }
