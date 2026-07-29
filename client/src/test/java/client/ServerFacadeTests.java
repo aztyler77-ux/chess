@@ -83,9 +83,7 @@ public class ServerFacadeTests {
     @Test
     public void createGameSuccess() throws ResponseException {
         var user = facade.register("player1", "password", "email");
-
         int gameID = facade.createGame(user.authToken(), "My Game");
-
         Assertions.assertTrue(gameID > 0);
     }
 
@@ -98,12 +96,9 @@ public class ServerFacadeTests {
     @Test
     public void listGamesSuccess() throws ResponseException {
         var user = facade.register("player1", "password", "email");
-
         facade.createGame(user.authToken(), "Game One");
         facade.createGame(user.authToken(), "Game Two");
-
         var games = facade.listGames(user.authToken());
-
         Assertions.assertEquals(2, games.size());
     }
 
@@ -130,5 +125,5 @@ public class ServerFacadeTests {
         var second = facade.register("player2", "password", "email2");
         Assertions.assertThrows(ResponseException.class,
                 () -> facade.joinGame(second.authToken(), "WHITE", gameID));
-    }
+        }
 }
