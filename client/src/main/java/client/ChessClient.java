@@ -36,18 +36,23 @@ public class ChessClient {
         String[] stuff = line.trim().split("\\s+");
         try {
             if (token == null) {
+                if (stuff[0].equalsIgnoreCase("help") && stuff.length != 1) {return "Usage: help";}
                 if (stuff[0].equalsIgnoreCase("help")) {return preHelp();}
                 if (stuff[0].equalsIgnoreCase("login")) {return login(stuff);}
                 if (stuff[0].equalsIgnoreCase("register")) {return register(stuff);}
             } else {
+                if (stuff[0].equalsIgnoreCase("help") && stuff.length != 1) {return "Usage: help";}
                 if (stuff[0].equalsIgnoreCase("help")) {return postHelp();}
                 if (stuff[0].equalsIgnoreCase("create")) {return create(stuff);}
+                if (stuff[0].equalsIgnoreCase("list") && stuff.length != 1) {return "Usage: list";}
                 if (stuff[0].equalsIgnoreCase("list")) {return list();}
                 if (stuff[0].equalsIgnoreCase("join")) {return join(stuff);}
                 if (stuff[0].equalsIgnoreCase("observe")) {return observe(stuff);}
+                if (stuff[0].equalsIgnoreCase("logout") && stuff.length != 1) {return "Usage: logout";}
                 if (stuff[0].equalsIgnoreCase("logout")) {return logout();}
             }
         } catch (ResponseException error) {return error.getMessage();}
+        catch (Exception error) {return "Something went wrong";}
         return "Unknown command. Type help.";
     }
 
