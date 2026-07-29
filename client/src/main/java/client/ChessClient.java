@@ -1,6 +1,7 @@
 package client;
 
 import model.GameData;
+import ui.BoardDrawer;
 import java.util.List;
 import java.util.Scanner;
 
@@ -8,9 +9,11 @@ public class ChessClient {
     private ServerFacade server;
     private String token;
     private List<GameData> games;
+    private BoardDrawer drawer;
 
     public ChessClient(int port) {
         server = new ServerFacade(port);
+        drawer = new BoardDrawer();
     }
 
     public void run() {
@@ -40,6 +43,8 @@ public class ChessClient {
                 if (stuff[0].equalsIgnoreCase("help")) {return postHelp();}
                 if (stuff[0].equalsIgnoreCase("create")) {return create(stuff);}
                 if (stuff[0].equalsIgnoreCase("list")) {return list();}
+                if (stuff[0].equalsIgnoreCase("join")) {return join(stuff);}
+                if (stuff[0].equalsIgnoreCase("observe")) {return observe(stuff);}
                 if (stuff[0].equalsIgnoreCase("logout")) {return logout();}
             }
         } catch (ResponseException error) {return error.getMessage();}
@@ -87,6 +92,52 @@ public class ChessClient {
         return answer;
     }
 
+    private String join(String[] stuff) throws ResponseException {
+        if (stuff.length != 3) {return "Usage: join <GAME NUMBER> <WHITE|BLACK>";}
+        if (games == null) {return "Use list first";}
+
+        int number;
+        try {
+            number = Integer.parseInt(stuff[1]);
+        } catch (NumberFormatException error) {
+            return "Game number has to be a number";
+        }
+
+        if (number < 1 || number > games.size()) {
+            return "That game isn't in the list";
+        }
+
+        String color = stuff[2].toUpperCase();
+        if (!color.equals("WHITE") && !color.equals("BLACK")) {
+            return "Color has to be WHITE or BLACK";
+        }
+
+        var game = games.get(number - 1);
+        server.joinGame(token, color, game.gameID());
+        drawer.draw(game.game().getBoard(), color);
+        return "Joined " + game.gameName() + " as " + color;
+    }
+
+    private String observe(String[] stuff) {
+        if (stuff.length != 2) {return "Usage: observe <GAME NUMBER>";}
+        if (games == null) {return "Use list first";}
+
+        int number;
+        try {
+            number = Integer.parseInt(stuff[1]);
+        } catch (NumberFormatException error) {
+            return "Game number has to be a number";
+        }
+
+        if (number < 1 || number > games.size()) {
+            return "That game isn't in the list";
+        }
+
+        var game = games.get(number - 1);
+        drawer.draw(game.game().getBoard(), "WHITE");
+        return "Observing " + game.gameName();
+    }
+
     private String logout() throws ResponseException {
         server.logout(token);
         token = null;
@@ -107,6 +158,8 @@ public class ChessClient {
         return """
                 create <GAME NAME>
                 list
+                join <GAME NUMBER> <WHITE|BLACK>
+                observe <GAME NUMBER>
                 logout
                 help
                 quit
