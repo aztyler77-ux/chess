@@ -23,6 +23,7 @@ import service.LogoutRequest;
 import service.ListGamesRequest;
 import service.CreateGameRequest;
 import service.JoinGameRequest;
+import websocket.WebSocketHandler;
 
 public class Server {
     // data stores for server
@@ -48,6 +49,7 @@ public class Server {
         userDAO = new MySQLUserDAO();
         authDAO = new MySQLAuthDAO();
         gameDAO = new MySQLGameDAO();
+        WebSocketHandler webSocketHandler = new WebSocketHandler(authDAO, gameDAO);
         // services connect to DOAs
         clearService = new ClearService(userDAO, authDAO, gameDAO);
         userService = new UserService(userDAO, authDAO);
@@ -56,6 +58,9 @@ public class Server {
 
         // jav serves web files
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
+        javalin.ws("/ws", ws -> {
+            ws.onMessage(webSocketHandler::onMessage);
+        });
 
         // http endpoints
         registerClearRoute();
