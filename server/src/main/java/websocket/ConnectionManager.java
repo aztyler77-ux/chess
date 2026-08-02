@@ -33,9 +33,8 @@ public class ConnectionManager {
         if (!connections.containsKey(gameID)) {
             return;
         }
-
         for (WsContext ctx : connections.get(gameID).keySet()) {
-            if (ctx != skip) {
+            if (skip == null || ctx.session != skip.session) {
                 send(ctx, message);
             }
         }

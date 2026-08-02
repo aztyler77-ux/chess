@@ -11,6 +11,9 @@ import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
+import websocket.commands.MakeMoveCommand;
+import chess.ChessGame;
+import chess.InvalidMoveException;
 
 public class WebSocketHandler {
 
@@ -28,6 +31,9 @@ public class WebSocketHandler {
         UserGameCommand command = gson.fromJson(ctx.message(), UserGameCommand.class);
         if (command.getCommandType() == UserGameCommand.CommandType.CONNECT) {
             connect(ctx, command);
+        } else if (command.getCommandType() == UserGameCommand.CommandType.MAKE_MOVE) {
+            MakeMoveCommand moveCommand = gson.fromJson(ctx.message(), MakeMoveCommand.class);
+            makeMove(ctx, moveCommand);
         } else {
             connections.send(ctx, new ErrorMessage("Error: command not added yet"));
         }
@@ -55,11 +61,44 @@ public class WebSocketHandler {
             } else {
                 message = auth.username() + " joined as an observer";
             }
-            connections.broadcast(
-                    game.gameID(),
-                    new NotificationMessage(message),
-                    ctx
-            );
+            connections.broadcast(game.gameID(), new NotificationMessage(message), ctx);
+        } catch (DataAccessException e) {
+            connections.send(ctx, new ErrorMessage("Error: " + e.getMessage()));
+        }
+    }
+
+    private void makeMove(WsMessageContext ctx, MakeMoveCommand command) {
+        try {
+            AuthData auth = authDAO.getAuth(command.getAuthToken());
+            if (auth == null) {
+                connections.send(ctx, new ErrorMessage("Error: bad auth token"));
+                return;
+            }
+            GameData game = gameDAO.getGame(command.getGameID());
+            if (game == null) {
+                connections.send(ctx, new ErrorMessage("Error: game not found"));
+                return;
+            }
+            ChessGame.TeamColor turn = game.game().getTeamTurn();
+            if (turn == ChessGame.TeamColor.WHITE
+                    && !auth.username().equals(game.whiteUsername())) {
+                connections.send(ctx, new ErrorMessage("Error: not your turn"));
+                return;
+            }
+            if (turn == ChessGame.TeamColor.BLACK
+                    && !auth.username().equals(game.blackUsername())) {
+                connections.send(ctx, new ErrorMessage("Error: not your turn"));
+                return;
+            }
+            game.game().makeMove(command.getMove());
+            GameData updatedGame = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
+            gameDAO.updateGame(updatedGame);
+            connections.broadcast(game.gameID(), new LoadGameMessage(updatedGame), null);
+            String message = auth.username() + " made a move";
+            connections.broadcast(game.gameID(), new NotificationMessage(message), ctx);
+
+        } catch (InvalidMoveException e) {
+            connections.send(ctx, new ErrorMessage("Error: invalid move"));
         } catch (DataAccessException e) {
             connections.send(ctx, new ErrorMessage("Error: " + e.getMessage()));
         }
