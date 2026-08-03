@@ -36,6 +36,8 @@ public class WebSocketHandler {
             makeMove(ctx, moveCommand);
         } else if (command.getCommandType() == UserGameCommand.CommandType.RESIGN) {
             resign(ctx, command);
+        } else if (command.getCommandType() == UserGameCommand.CommandType.LEAVE) {
+            leave(ctx, command);
         } else {
             connections.send(ctx, new ErrorMessage("Error: command not added yet"));
         }
@@ -153,6 +155,35 @@ public class WebSocketHandler {
             GameData updatedGame = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
             gameDAO.updateGame(updatedGame);
             String message = auth.username() + " resigned";
+            connections.broadcast(game.gameID(), new NotificationMessage(message), null);
+        } catch (DataAccessException e) {
+            connections.send(ctx, new ErrorMessage("Error: " + e.getMessage()));
+        }
+    }
+
+    private void leave(WsMessageContext ctx, UserGameCommand command) {
+        try {
+            AuthData auth = authDAO.getAuth(command.getAuthToken());
+            if (auth == null) {
+                connections.send(ctx, new ErrorMessage("Error: bad auth token"));
+                return;
+            }
+            GameData game = gameDAO.getGame(command.getGameID());
+            if (game == null) {
+                connections.send(ctx, new ErrorMessage("Error: game not found"));
+                return;
+            }
+            String white = game.whiteUsername();
+            String black = game.blackUsername();
+            if (auth.username().equals(white)) {
+                white = null;
+            } else if (auth.username().equals(black)) {
+                black = null;
+            }
+            GameData updatedGame = new GameData(game.gameID(), white, black, game.gameName(), game.game());
+            gameDAO.updateGame(updatedGame);
+            connections.remove(game.gameID(), ctx);
+            String message = auth.username() + " left the game";
             connections.broadcast(game.gameID(), new NotificationMessage(message), null);
         } catch (DataAccessException e) {
             connections.send(ctx, new ErrorMessage("Error: " + e.getMessage()));
