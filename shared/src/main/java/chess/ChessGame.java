@@ -7,15 +7,25 @@ import java.util.Objects;
 public class ChessGame {
     private ChessBoard board;
     private TeamColor teamTurn;
+    private boolean gameOver;
 
     public ChessGame() {
         board = new ChessBoard();
         board.resetBoard();
         teamTurn = TeamColor.WHITE;
+        gameOver = false;
     }
 
     public TeamColor getTeamTurn() {
         return teamTurn;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
     }
 
     public void setTeamTurn(TeamColor team) {
@@ -91,6 +101,10 @@ public class ChessGame {
     }
 
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        if (gameOver) {
+            throw new InvalidMoveException();
+        }
+
         if (move == null
                 || move.getEndPosition() == null
                 || move.getStartPosition() == null

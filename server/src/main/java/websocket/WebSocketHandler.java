@@ -91,11 +91,33 @@ public class WebSocketHandler {
                 return;
             }
             game.game().makeMove(command.getMove());
+            ChessGame.TeamColor nextTurn = game.game().getTeamTurn();
+            String statusMessage = null;
+            if (game.game().isInCheckmate(nextTurn)) {
+                game.game().setGameOver(true);
+                if (nextTurn == ChessGame.TeamColor.WHITE) {
+                    statusMessage = game.whiteUsername() + " is in checkmate";
+                } else {
+                    statusMessage = game.blackUsername() + " is in checkmate";
+                }
+            } else if (game.game().isInStalemate(nextTurn)) {
+                game.game().setGameOver(true);
+                statusMessage = "game ended in stalemate";
+            } else if (game.game().isInCheck(nextTurn)) {
+                if (nextTurn == ChessGame.TeamColor.WHITE) {
+                    statusMessage = game.whiteUsername() + " is in check";
+                } else {
+                    statusMessage = game.blackUsername() + " is in check";
+                }
+            }
             GameData updatedGame = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
             gameDAO.updateGame(updatedGame);
             connections.broadcast(game.gameID(), new LoadGameMessage(updatedGame), null);
             String message = auth.username() + " made a move";
             connections.broadcast(game.gameID(), new NotificationMessage(message), ctx);
+            if (statusMessage != null) {
+                connections.broadcast(game.gameID(), new NotificationMessage(statusMessage), null);
+            }
 
         } catch (InvalidMoveException e) {
             connections.send(ctx, new ErrorMessage("Error: invalid move"));
