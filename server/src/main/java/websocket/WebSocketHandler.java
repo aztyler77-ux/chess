@@ -34,6 +34,8 @@ public class WebSocketHandler {
         } else if (command.getCommandType() == UserGameCommand.CommandType.MAKE_MOVE) {
             MakeMoveCommand moveCommand = gson.fromJson(ctx.message(), MakeMoveCommand.class);
             makeMove(ctx, moveCommand);
+        } else if (command.getCommandType() == UserGameCommand.CommandType.RESIGN) {
+            resign(ctx, command);
         } else {
             connections.send(ctx, new ErrorMessage("Error: command not added yet"));
         }
@@ -121,6 +123,37 @@ public class WebSocketHandler {
 
         } catch (InvalidMoveException e) {
             connections.send(ctx, new ErrorMessage("Error: invalid move"));
+        } catch (DataAccessException e) {
+            connections.send(ctx, new ErrorMessage("Error: " + e.getMessage()));
+        }
+    }
+
+    private void resign(WsMessageContext ctx, UserGameCommand command) {
+        try {
+            AuthData auth = authDAO.getAuth(command.getAuthToken());
+            if (auth == null) {
+                connections.send(ctx, new ErrorMessage("Error: bad auth token"));
+                return;
+            }
+            GameData game = gameDAO.getGame(command.getGameID());
+            if (game == null) {
+                connections.send(ctx, new ErrorMessage("Error: game not found"));
+                return;
+            }
+            if (!auth.username().equals(game.whiteUsername())
+                    && !auth.username().equals(game.blackUsername())) {
+                connections.send(ctx, new ErrorMessage("Error: observers cannot resign"));
+                return;
+            }
+            if (game.game().isGameOver()) {
+                connections.send(ctx, new ErrorMessage("Error: game is already over"));
+                return;
+            }
+            game.game().setGameOver(true);
+            GameData updatedGame = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
+            gameDAO.updateGame(updatedGame);
+            String message = auth.username() + " resigned";
+            connections.broadcast(game.gameID(), new NotificationMessage(message), null);
         } catch (DataAccessException e) {
             connections.send(ctx, new ErrorMessage("Error: " + e.getMessage()));
         }
