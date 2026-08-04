@@ -2,6 +2,7 @@ package client;
 
 import model.GameData;
 import ui.BoardDrawer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import client.websocket.NotificationHandler;
@@ -62,6 +63,7 @@ public class ChessClient implements NotificationHandler {
                 if (stuff[0].equalsIgnoreCase("help")) {return gameHelp();}
                 if (stuff[0].equalsIgnoreCase("redraw") && stuff.length != 1) {return "Usage: redraw";}
                 if (stuff[0].equalsIgnoreCase("redraw")) {return redraw();}
+                if (stuff[0].equalsIgnoreCase("highlight")) {return highlight(stuff);}
                 if (stuff[0].equalsIgnoreCase("move")) {return move(stuff);}
                 if (stuff[0].equalsIgnoreCase("resign") && stuff.length != 1) {return "Usage: resign";}
                 if (stuff[0].equalsIgnoreCase("resign")) {return resign();}
@@ -177,10 +179,39 @@ public class ChessClient implements NotificationHandler {
         return "Board redrawn";
     }
 
+    private String highlight(String[] stuff) {
+        if (stuff.length != 2) {return "Usage: highlight <SQUARE>";}
+        if (currentGame == null) {return "Game hasn't loaded yet";}
+        if (stuff[1].length() != 2) {return "Square should look like e2";}
+
+        int col = Character.toLowerCase(stuff[1].charAt(0)) - 'a' + 1;
+        int row;
+
+        try {
+            row = Integer.parseInt(stuff[1].substring(1));
+        } catch (NumberFormatException error) {
+            return "Square should look like e2";
+        }
+        if (row < 1 || row > 8 || col < 1 || col > 8) {
+            return "Square has to be on the board";
+        }
+        ChessPosition position = new ChessPosition(row, col);
+        if (currentGame.game().getBoard().getPiece(position) == null) {
+            return "There isn't a piece there";
+        }
+        List<ChessPosition> highlights = new ArrayList<>();
+        highlights.add(position);
+        var moves = currentGame.game().validMoves(position);
+        for (ChessMove move : moves) {
+            highlights.add(move.getEndPosition());
+        }
+        drawer.draw(currentGame.game().getBoard(), side, highlights);
+        return "Legal moves highlighted";
+    }
+
     private String move(String[] stuff) throws ResponseException {
         if (stuff.length != 3 && stuff.length != 4) {return "Usage: move <START> <END> [QUEEN|ROOK|BISHOP|KNIGHT]";}
         if (stuff[1].length() != 2 || stuff[2].length() != 2) {return "Squares should look like e2 e4";}
-
         int startCol = Character.toLowerCase(stuff[1].charAt(0)) - 'a' + 1;
         int endCol = Character.toLowerCase(stuff[2].charAt(0)) - 'a' + 1;
         int startRow;
@@ -192,12 +223,10 @@ public class ChessClient implements NotificationHandler {
         } catch (NumberFormatException error) {
             return "Squares should look like e2 e4";
         }
-
         if (startRow < 1 || startRow > 8 || endRow < 1 || endRow > 8
                 || startCol < 1 || startCol > 8 || endCol < 1 || endCol > 8) {
             return "Squares have to be on the board";
         }
-
         ChessPiece.PieceType promotion = null;
         if (stuff.length == 4) {
             try {
@@ -209,7 +238,6 @@ public class ChessClient implements NotificationHandler {
                 return "Promotion has to be QUEEN, ROOK, BISHOP, or KNIGHT";
             }
         }
-
         ChessPosition start = new ChessPosition(startRow, startCol);
         ChessPosition end = new ChessPosition(endRow, endCol);
         ChessMove move = new ChessMove(start, end, promotion);
@@ -266,13 +294,13 @@ public class ChessClient implements NotificationHandler {
     private String gameHelp() {
         return """
                 move <START> <END> [QUEEN|ROOK|BISHOP|KNIGHT]
+                highlight <SQUARE>
                 redraw
                 resign
                 leave
                 help
                 """;
     }
-
     @Override
     public void notify(ServerMessage message) {
         if (message instanceof LoadGameMessage loadMessage) {
