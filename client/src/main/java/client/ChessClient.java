@@ -10,6 +10,9 @@ import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
+import chess.ChessMove;
+import chess.ChessPiece;
+import chess.ChessPosition;
 
 public class ChessClient implements NotificationHandler {
     private ServerFacade server;
@@ -22,15 +25,16 @@ public class ChessClient implements NotificationHandler {
     private String side;
     private int port;
     private boolean inGame;
+    private Scanner scanner;
 
     public ChessClient(int port) {
         server = new ServerFacade(port);
         drawer = new BoardDrawer();
+        scanner = new Scanner(System.in);
         this.port = port;
     }
 
     public void run() {
-        Scanner scanner = new Scanner(System.in);
         System.out.println("Welcome to 240 Chess");
         System.out.println(preHelp());
         while (true) {
@@ -58,6 +62,9 @@ public class ChessClient implements NotificationHandler {
                 if (stuff[0].equalsIgnoreCase("help")) {return gameHelp();}
                 if (stuff[0].equalsIgnoreCase("redraw") && stuff.length != 1) {return "Usage: redraw";}
                 if (stuff[0].equalsIgnoreCase("redraw")) {return redraw();}
+                if (stuff[0].equalsIgnoreCase("move")) {return move(stuff);}
+                if (stuff[0].equalsIgnoreCase("resign") && stuff.length != 1) {return "Usage: resign";}
+                if (stuff[0].equalsIgnoreCase("resign")) {return resign();}
                 if (stuff[0].equalsIgnoreCase("leave") && stuff.length != 1) {return "Usage: leave";}
                 if (stuff[0].equalsIgnoreCase("leave")) {return leave();}
             } else {
@@ -170,6 +177,54 @@ public class ChessClient implements NotificationHandler {
         return "Board redrawn";
     }
 
+    private String move(String[] stuff) throws ResponseException {
+        if (stuff.length != 3 && stuff.length != 4) {return "Usage: move <START> <END> [QUEEN|ROOK|BISHOP|KNIGHT]";}
+        if (stuff[1].length() != 2 || stuff[2].length() != 2) {return "Squares should look like e2 e4";}
+
+        int startCol = Character.toLowerCase(stuff[1].charAt(0)) - 'a' + 1;
+        int endCol = Character.toLowerCase(stuff[2].charAt(0)) - 'a' + 1;
+        int startRow;
+        int endRow;
+
+        try {
+            startRow = Integer.parseInt(stuff[1].substring(1));
+            endRow = Integer.parseInt(stuff[2].substring(1));
+        } catch (NumberFormatException error) {
+            return "Squares should look like e2 e4";
+        }
+
+        if (startRow < 1 || startRow > 8 || endRow < 1 || endRow > 8
+                || startCol < 1 || startCol > 8 || endCol < 1 || endCol > 8) {
+            return "Squares have to be on the board";
+        }
+
+        ChessPiece.PieceType promotion = null;
+        if (stuff.length == 4) {
+            try {
+                promotion = ChessPiece.PieceType.valueOf(stuff[3].toUpperCase());
+            } catch (IllegalArgumentException error) {
+                return "Promotion has to be QUEEN, ROOK, BISHOP, or KNIGHT";
+            }
+            if (promotion == ChessPiece.PieceType.KING || promotion == ChessPiece.PieceType.PAWN) {
+                return "Promotion has to be QUEEN, ROOK, BISHOP, or KNIGHT";
+            }
+        }
+
+        ChessPosition start = new ChessPosition(startRow, startCol);
+        ChessPosition end = new ChessPosition(endRow, endCol);
+        ChessMove move = new ChessMove(start, end, promotion);
+        websocket.makeMove(token, gameID, move);
+        return "Move sent";
+    }
+
+    private String resign() throws ResponseException {
+        System.out.print("Are you sure you want to resign? yes/no: ");
+        String answer = scanner.nextLine();
+        if (!answer.equalsIgnoreCase("yes")) {return "Resign cancelled";}
+        websocket.resign(token, gameID);
+        return "You resigned";
+    }
+
     private String leave() throws ResponseException {
         websocket.leave(token, gameID);
         inGame = false;
@@ -210,7 +265,9 @@ public class ChessClient implements NotificationHandler {
 
     private String gameHelp() {
         return """
+                move <START> <END> [QUEEN|ROOK|BISHOP|KNIGHT]
                 redraw
+                resign
                 leave
                 help
                 """;
