@@ -4,16 +4,28 @@ import model.GameData;
 import ui.BoardDrawer;
 import java.util.List;
 import java.util.Scanner;
+import client.websocket.NotificationHandler;
+import client.websocket.WebSocketFacade;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
+import websocket.messages.ServerMessage;
 
-public class ChessClient {
+public class ChessClient implements NotificationHandler {
     private ServerFacade server;
     private String token;
     private List<GameData> games;
     private BoardDrawer drawer;
+    private WebSocketFacade websocket;
+    private GameData currentGame;
+    private int gameID;
+    private String side;
+    private int port;
 
     public ChessClient(int port) {
         server = new ServerFacade(port);
         drawer = new BoardDrawer();
+        this.port = port;
     }
 
     public void run() {
@@ -100,46 +112,45 @@ public class ChessClient {
     private String join(String[] stuff) throws ResponseException {
         if (stuff.length != 3) {return "Usage: join <GAME NUMBER> <WHITE|BLACK>";}
         if (games == null) {return "Use list first";}
-
         int number;
         try {
             number = Integer.parseInt(stuff[1]);
         } catch (NumberFormatException error) {
             return "Game number has to be a number";
         }
-
         if (number < 1 || number > games.size()) {
             return "That game isn't in the list";
         }
-
         String color = stuff[2].toUpperCase();
         if (!color.equals("WHITE") && !color.equals("BLACK")) {
             return "Color has to be WHITE or BLACK";
         }
-
         var game = games.get(number - 1);
         server.joinGame(token, color, game.gameID());
-        drawer.draw(game.game().getBoard(), color);
+        gameID = game.gameID();
+        side = color;
+        websocket = new WebSocketFacade(port, this);
+        websocket.connect(token, gameID);
         return "Joined " + game.gameName() + " as " + color;
     }
 
-    private String observe(String[] stuff) {
+    private String observe(String[] stuff) throws ResponseException {
         if (stuff.length != 2) {return "Usage: observe <GAME NUMBER>";}
         if (games == null) {return "Use list first";}
-
         int number;
         try {
             number = Integer.parseInt(stuff[1]);
         } catch (NumberFormatException error) {
             return "Game number has to be a number";
         }
-
         if (number < 1 || number > games.size()) {
             return "That game isn't in the list";
         }
-
         var game = games.get(number - 1);
-        drawer.draw(game.game().getBoard(), "WHITE");
+        gameID = game.gameID();
+        side = "WHITE";
+        websocket = new WebSocketFacade(port, this);
+        websocket.connect(token, gameID);
         return "Observing " + game.gameName();
     }
 
@@ -169,5 +180,20 @@ public class ChessClient {
                 help
                 quit
                 """;
+    }
+
+    @Override
+    public void notify(ServerMessage message) {
+        if (message instanceof LoadGameMessage loadMessage) {
+            currentGame = loadMessage.getGame();
+            if (side == null) {
+                side = "WHITE";
+            }
+            drawer.draw(currentGame.game().getBoard(), side);
+        } else if (message instanceof ErrorMessage errorMessage) {
+            System.out.println(errorMessage.getErrorMessage());
+        } else if (message instanceof NotificationMessage notificationMessage) {
+            System.out.println(notificationMessage.getMessage());
+        }
     }
 }
