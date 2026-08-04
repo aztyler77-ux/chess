@@ -26,17 +26,13 @@ import service.JoinGameRequest;
 import websocket.WebSocketHandler;
 
 public class Server {
-    // data stores for server
     private final UserDAO userDAO;
     private final AuthDAO authDAO;
     private final GameDAO gameDAO;
-    // Services for app logic
     private final ClearService clearService;
     private final UserService userService;
     private final GameService gameService;
-    // Gson to convert between JSON & Java
     private final Gson gson;
-    // Javalin for HTTP server / routing
     private final Javalin javalin;
 
     public Server() {
@@ -45,27 +41,22 @@ public class Server {
             throw new RuntimeException("Could not set up database", e);
         }
 
-        // database DAO group
         userDAO = new MySQLUserDAO();
         authDAO = new MySQLAuthDAO();
         gameDAO = new MySQLGameDAO();
         WebSocketHandler webSocketHandler = new WebSocketHandler(authDAO, gameDAO);
-        // services connect to DOAs
         clearService = new ClearService(userDAO, authDAO, gameDAO);
         userService = new UserService(userDAO, authDAO);
         gameService = new GameService(gameDAO, authDAO);
         gson = new Gson();
 
-        // jav serves web files
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
         javalin.ws("/ws", ws -> {
             ws.onMessage(webSocketHandler::onMessage);
         });
 
-        // http endpoints
         registerClearRoute();
 
-        // register
         javalin.post("/user", ctx -> {
             try {
                 RegisterRequest request = gson.fromJson(ctx.body(), RegisterRequest.class);
@@ -75,7 +66,6 @@ public class Server {
             catch (AlreadyTakenException error) {sendJson(ctx, 403, Map.of("message", error.getMessage()));}
         });
 
-        // login
         javalin.post("/session", ctx -> {
             try {
                 LoginRequest request = gson.fromJson(ctx.body(), LoginRequest.class);
@@ -85,7 +75,6 @@ public class Server {
             catch (DataAccessException error) {sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
         });
 
-        // logout
         javalin.delete("/session", ctx -> {
             try {
                 String authToken = ctx.header("authorization");
@@ -96,7 +85,6 @@ public class Server {
             catch (DataAccessException error) {sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
         });
 
-        // list games
         javalin.get("/game", ctx -> {
             try {
                 String authToken = ctx.header("authorization");
@@ -106,7 +94,6 @@ public class Server {
             catch (DataAccessException error) {sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
         });
 
-        // create game
         javalin.post("/game", ctx -> {
             try {
                 String authToken = ctx.header("authorization");
@@ -122,7 +109,6 @@ public class Server {
             catch (DataAccessException error) {sendJson(ctx, 500, Map.of("message", "Error: " + error.getMessage()));}
         });
 
-        // join game
         javalin.put("/game", ctx -> {
             try {
                 String authToken = ctx.header("authorization");
@@ -143,7 +129,6 @@ public class Server {
         });
     }
 
-    // clear route
     private void registerClearRoute() {
         javalin.delete("/db", ctx -> {
             try {
@@ -154,14 +139,12 @@ public class Server {
         });
     }
 
-    // javalin configured object mapper
     private void sendJson(Context ctx, int statusCode, Object body) {
         ctx.status(statusCode);
         ctx.contentType("application/json");
         ctx.result(gson.toJson(body));
     }
 
-    // start & stop server
     public int run(int targetPort) {
         javalin.start(targetPort);
         return javalin.port();
