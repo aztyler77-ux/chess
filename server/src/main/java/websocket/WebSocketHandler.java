@@ -14,6 +14,7 @@ import websocket.messages.NotificationMessage;
 import websocket.commands.MakeMoveCommand;
 import chess.ChessGame;
 import chess.InvalidMoveException;
+import chess.ChessPosition;
 
 public class WebSocketHandler {
 
@@ -117,7 +118,12 @@ public class WebSocketHandler {
             GameData updatedGame = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
             gameDAO.updateGame(updatedGame);
             connections.broadcast(game.gameID(), new LoadGameMessage(updatedGame), null);
-            String message = auth.username() + " made a move";
+            ChessPosition start = command.getMove().getStartPosition();
+            ChessPosition end = command.getMove().getEndPosition();
+            char startCol = (char) ('a' + start.getColumn() - 1);
+            char endCol = (char) ('a' + end.getColumn() - 1);
+            String message = auth.username() + " moved " + startCol + start.getRow()
+                    + " to " + endCol + end.getRow();
             connections.broadcast(game.gameID(), new NotificationMessage(message), ctx);
             if (statusMessage != null) {
                 connections.broadcast(game.gameID(), new NotificationMessage(statusMessage), null);
