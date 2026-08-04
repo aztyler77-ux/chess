@@ -21,6 +21,7 @@ public class ChessClient implements NotificationHandler {
     private int gameID;
     private String side;
     private int port;
+    private boolean inGame;
 
     public ChessClient(int port) {
         server = new ServerFacade(port);
@@ -52,6 +53,13 @@ public class ChessClient implements NotificationHandler {
                 if (stuff[0].equalsIgnoreCase("help")) {return preHelp();}
                 if (stuff[0].equalsIgnoreCase("login")) {return login(stuff);}
                 if (stuff[0].equalsIgnoreCase("register")) {return register(stuff);}
+            } else if (inGame) {
+                if (stuff[0].equalsIgnoreCase("help") && stuff.length != 1) {return "Usage: help";}
+                if (stuff[0].equalsIgnoreCase("help")) {return gameHelp();}
+                if (stuff[0].equalsIgnoreCase("redraw") && stuff.length != 1) {return "Usage: redraw";}
+                if (stuff[0].equalsIgnoreCase("redraw")) {return redraw();}
+                if (stuff[0].equalsIgnoreCase("leave") && stuff.length != 1) {return "Usage: leave";}
+                if (stuff[0].equalsIgnoreCase("leave")) {return leave();}
             } else {
                 if (stuff[0].equalsIgnoreCase("help") && stuff.length != 1) {return "Usage: help";}
                 if (stuff[0].equalsIgnoreCase("help")) {return postHelp();}
@@ -129,6 +137,7 @@ public class ChessClient implements NotificationHandler {
         server.joinGame(token, color, game.gameID());
         gameID = game.gameID();
         side = color;
+        inGame = true;
         websocket = new WebSocketFacade(port, this);
         websocket.connect(token, gameID);
         return "Joined " + game.gameName() + " as " + color;
@@ -149,9 +158,26 @@ public class ChessClient implements NotificationHandler {
         var game = games.get(number - 1);
         gameID = game.gameID();
         side = "WHITE";
+        inGame = true;
         websocket = new WebSocketFacade(port, this);
         websocket.connect(token, gameID);
         return "Observing " + game.gameName();
+    }
+
+    private String redraw() {
+        if (currentGame == null) {return "Game hasn't loaded yet";}
+        drawer.draw(currentGame.game().getBoard(), side);
+        return "Board redrawn";
+    }
+
+    private String leave() throws ResponseException {
+        websocket.leave(token, gameID);
+        inGame = false;
+        currentGame = null;
+        websocket = null;
+        side = null;
+        gameID = 0;
+        return "Left the game";
     }
 
     private String logout() throws ResponseException {
@@ -179,6 +205,14 @@ public class ChessClient implements NotificationHandler {
                 logout
                 help
                 quit
+                """;
+    }
+
+    private String gameHelp() {
+        return """
+                redraw
+                leave
+                help
                 """;
     }
 
